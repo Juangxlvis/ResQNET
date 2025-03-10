@@ -223,6 +223,48 @@ paths:
           description: Invalid code or expired.
         '500':
           description: Internal server error.
+          
+  /auth/recovery-code:
+
+    post:
+      summary: Send verification code
+      tags:
+        - Authentication  
+      operationId: sendVerificationCode
+      requestBody:
+        required: true
+        content: 
+          application/json: 
+            schema: 
+              $ref: "#/components/schemas/PasswordResetResponse"
+      responses: 
+        "200":
+          description: code sent successfully
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/PasswordResetResponse"
+              example:
+                code: OK
+                message: code sent successfully
+        "400":
+          description: Invalid email format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetResponse"
+              example:
+                code: BAD_REQUEST
+                message: Invalid email format
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetResponse"
+              example:
+                code: INTERNAL_SERVER_ERROR
+                message: Unexpected error
 
   # Reports
   /reports:
@@ -535,17 +577,23 @@ paths:
     get:
       summary: List categories
       tags:
-        - Others
+        - Categories
       responses:
         '200':
           description: Categories retrieved successfully.
         '500':
           description: Internal server error.
-          
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/CategoryDTO'
+            
     post:
       summary: Create a category
       tags:
-        - Others
+        - Categories
       requestBody:
         required: true
         content:
@@ -571,7 +619,7 @@ paths:
     put:
       summary: Edit category
       tags:
-        - Others
+        - Categories
       parameters:
         - name: id
           in: path
@@ -604,7 +652,7 @@ paths:
     delete:
       summary: Delete category
       tags:
-        - Others
+        - Categories
       parameters:
         - name: id
           in: path
@@ -617,6 +665,103 @@ paths:
           description: Category deleted successfully.
         '404':
           description: Category not found.
+        '500':
+          description: Internal server error.
+          
+          
+  /cities:
+    get:
+      summary: List all cities
+      tags: [Cities]
+      responses:
+        '200':
+          description: List of cities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CityDTO'
+        '500':
+          description: Internal server error.
+
+    post:
+      summary: Create a city
+      tags: [Cities]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CityDTO'
+      responses:
+        '201':
+          description: City created successfully.
+        '400':
+          description: Invalid request data.
+        '409':
+          description: City already exists.
+        '500':
+          description: Internal server error.
+
+  /cities/{id}:
+    parameters:  
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    
+    get:
+      summary: Get a city by ID
+      tags: [Cities]
+      responses:
+        '200':
+          description: City details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CityDTO'
+        '400':
+          description: Invalid city ID.
+        '404':
+          description: City not found.
+        '500':
+          description: Internal server error.
+    put:
+      summary: Update a city
+      tags: [Cities]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CityDTO'
+      responses:
+        '200':
+          description: City updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CityDTO'
+        '400':
+          description: Invalid request.
+        '404':
+          description: City not found.
+        '500':
+          description: Internal server error.
+
+
+    delete:
+      summary: Delete a city
+      tags: [Cities]
+      responses:
+        '204':
+          description: City deleted successfully.
+        '400':
+          description: Invalid city ID.
+        '404':
+          description: City not found.
         '500':
           description: Internal server error.
 
@@ -651,6 +796,13 @@ components:
           type: string
           minLength: 8
           maxLength: 50
+        location:
+          $ref: '#/components/schemas/LocationDTO'
+        preferredCategoryIds:
+          type: array
+          items:
+            type: string
+          example: ["cat1", "cat2"]
 
     VerificationDTO:
       type: object
@@ -719,9 +871,11 @@ components:
           type: string
           minLength: 5
           maxLength: 200
-        category:
-          type: string
-          enum: [incident, emergency, suggestion]
+        categoryIds:
+          type: array
+          items:
+            type: string
+          example: ["cat3", "cat4"]
         description:
           type: string
           minLength: 10
@@ -767,3 +921,44 @@ components:
           type: string
           minLength: 1
           maxLength: 500
+          
+    CategoryDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Seguridad
+      required: [name]
+          
+    CityDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Bogotá
+      required: [name]
+    
+    LocationDTO:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+      required: [latitude, longitude]       
+          
+    PasswordResetResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "123456"
+        message:
+          type: string
+          example: "A reset code has been sent to your email."
